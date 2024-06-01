@@ -402,6 +402,47 @@
     {
         "inputs": [
             {
+                "internalType": "address",
+                "name": "user",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "_roundIds",
+                "type": "uint256[]"
+            }
+        ],
+        "name": "getBets",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "bool",
+                        "name": "isParticipated",
+                        "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isBetRain",
+                        "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isOver",
+                        "type": "bool"
+                    }
+                ],
+                "internalType": "struct GizaWeatherGame.Bet[]",
+                "name": "res",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "bytes32",
                 "name": "role",
                 "type": "bytes32"

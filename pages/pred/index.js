@@ -2,9 +2,9 @@ import { ethers } from 'ethers'
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { faSun, faCloudRain } from '@fortawesome/free-solid-svg-icons';
-import { useNetwork, useContractRead, useAccount } from 'wagmi'
+import { faChevronLeft, faChevronRight, faCaretLeft, faCaretRight } from '@fortawesome/free-solid-svg-icons';
+import { faSun, faCloudRain, faQuestion, faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
+import { useNetwork, useContractRead, useContractWrite, useAccount } from 'wagmi'
 
 import GWGABI from '../../pages/data/ABI/gwg.json'
 
@@ -17,19 +17,22 @@ const Pred = () => {
   const { address: owner } = useAccount()
 
   const [rounds, setRounds] = useState([]);
+  const [bets, setBets] = useState([]);
+
 
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   const currentRound = rounds[currentRoundIndex];
+  const currentBet = bets[currentRoundIndex];
   const [animating, setAnimating] = useState(false);
 
-  const gwgContractAddress = '0xbc1a221F5076488C55bd940B12F890ffCF9e4172'
+  const gwgContractAddress = '0x7EF2CFc86513ec79b8C8DE742a0991be2798A8e9'
 
 
   const { data: roundsData } = useContractRead({
     address: gwgContractAddress,
     abi: GWGABI,
     functionName: 'getRounds',
-    args: [[1, 2]],
+    args: [[1, 2, 3, 4, 5]],
     watch: false,
     onSuccess(data) {
       let parseData = data.map(round => ({
@@ -48,6 +51,62 @@ const Pred = () => {
     }
   })
 
+  const { data: betsData } = useContractRead({
+    address: gwgContractAddress,
+    abi: GWGABI,
+    functionName: 'getBets',
+    args: [owner, [1, 2, 3, 4, 5]],
+    watch: false,
+    onSuccess(data) {
+      let parseData = data.map(bet => ({
+        isParticipated: bet[0],
+        isBetRain: bet[1],
+        isOver: bet[2],
+      }));
+
+      console.log('dataBet', parseData)
+
+      setBets(parseData)
+    }
+  })
+
+  const handlePlaceBet = (roundId, prediction) => {
+    placeBet({ recklesslySetUnpreparedArgs: [roundId, prediction] });
+  };
+
+
+  const { write: placeBet } = useContractWrite({
+    address: gwgContractAddress,
+    abi: GWGABI,
+    functionName: 'placeBet',
+    onError(e) {
+      console.log('error', e)
+    },
+    onClick(e) {
+      console.log('eeee')
+    }
+  })
+
+
+
+  const handleClaimReward = (roundId) => {
+    claimReward({ recklesslySetUnpreparedArgs: [roundId] });
+  };
+
+  const { write: claimReward } = useContractWrite({
+    address: gwgContractAddress,
+    abi: GWGABI,
+    functionName: 'claimReward',
+    onError(e) {
+      console.log('error', e)
+    },
+    onClick(e) {
+      console.log('eeee')
+    }
+  })
+
+
+
   const handlePrevious = () => {
     setAnimating(true);
     setTimeout(() => {
@@ -55,7 +114,7 @@ const Pred = () => {
         prevIndex === 0 ? rounds.length - 1 : prevIndex - 1
       );
       setAnimating(false);
-    }, 500); // Animation duration
+    }, 200);
   };
 
   const handleNext = () => {
@@ -65,7 +124,22 @@ const Pred = () => {
         prevIndex === rounds.length - 1 ? 0 : prevIndex + 1
       );
       setAnimating(false);
-    }, 500); // Animation duration
+    }, 200);
+  };
+
+  const renderIcons = () => {
+    const icons = [];
+    if (!currentRound.isOver) {
+      for (let i = 0; i < 5; i++) {
+        icons.push(<FontAwesomeIcon key={i} icon={faCircleQuestion} className='text-white mx-1' />);
+      }
+    } else {
+      const icon = currentRound.isRain ? faCloudRain : faSun;
+      for (let i = 0; i < 5; i++) {
+        icons.push(<FontAwesomeIcon key={i} icon={icon} className='text-white mx-1' />);
+      }
+    }
+    return icons;
   };
 
   useEffect(() => {
@@ -93,37 +167,56 @@ const Pred = () => {
       </div>
 
       {rounds.length > 0 ? (
-        <div className='flex items-center justify-center mt-8'>
-          <button onClick={handlePrevious} className='p-2 border text-2xl'>
-            <FontAwesomeIcon icon={faChevronLeft} />
-          </button>
-          <div className={`bg-gray-900 border-2 p-4 m-2 w-96 shadow-lg transform transition-transform duration-200 ${animating ? 'opacity-30' : 'opacity-100'}`}>
-            <h3 className='text-xl font-bold mb-2 text-white'>Round {currentRound.roundId}</h3>
-            <p className='text-white'>Start: {new Date(currentRound.startTimestamp * 1000).toLocaleString()}</p>
-            <p className='text-white'>End: {new Date(currentRound.endTimestamp * 1000).toLocaleString()}</p>
-            <p className='text-white'>Duration: {currentRound.durationTimestamp / 3600} hours</p>
-            <p className='text-white'>Bet Award: {currentRound.betAward}</p>
-            <p className='text-white'>{currentRound.isOver ? "Over" : "Active"}</p>
-            <p className='text-white'>{currentRound.isRain ? "Rain Expected" : "No Rain"}</p>
+        <div className='flex flex-col items-center justify-center mt-8'>
+          <div className='flex items-center justify-center'>
+            <button onClick={handlePrevious} className='p-2 text-5xl'>
+              <FontAwesomeIcon icon={faCaretLeft} />
+            </button>
+            <div className={`bg-gray-900 border-2 p-4 m-2 w-96 shadow-lg transform transition-transform duration-200 ${animating ? 'opacity-30' : 'opacity-100'} text-center`}>
+              <h3 className='text-xl font-bold mb-2 text-white pt-5'>Round  {new Date(currentRound.endTimestamp * 1000).toLocaleDateString()}</h3>
+              <p className='text-white pt-5'>{"Location: Los Angeles"}</p>
+              <p className='text-white'>Start Time: {new Date(currentRound.startTimestamp * 1000).toLocaleString()}</p>
+              <p className='text-white'>End Time: {new Date(currentRound.endTimestamp * 1000).toLocaleString()}</p>
 
 
-            <div className='flex justify-between mt-4 space-x-2'>
-              <button className='text-white text-3xl border-2 border-white p-2 w-full'>
-                <FontAwesomeIcon icon={faSun} />
-              </button>
-              <button className='text-white text-3xl border-2 border-white p-2 w-full'>
-                <FontAwesomeIcon icon={faCloudRain} />
-              </button>
+              <div className='flex justify-between mt-4 space-x-2 pt-10'>
+                <button
+                  onClick={() => handlePlaceBet(currentRound.roundId, false)}
+                  disabled={currentRound.isOver}
+                  className={`text-white border-2 p-2 w-full flex justify-center space-x-3 items-center h-10 ${currentBet?.isParticipated && !currentBet?.isBetRain ? 'bg-gray-700' : ''}`}
+                >
+                  <FontAwesomeIcon icon={faSun} />
+                  <p className='text-white'>{currentRound.betAward}</p>
+                </button>
+                <button
+                  onClick={() => handlePlaceBet(currentRound.roundId, true)}
+                  disabled={currentRound.isOver}
+                  className={`text-white border-2 p-2 w-full flex justify-center space-x-3 items-center h-10 ${currentBet?.isParticipated && currentBet?.isBetRain ? 'bg-gray-700' : ''}`}
+                >
+                  <FontAwesomeIcon icon={faCloudRain} />
+                  <p className='text-white'>{100 - currentRound.betAward}</p>
+                </button>
+              </div>
+
+
+              <div className='flex justify-center mt-4'>
+
+                <button
+                  onClick={() => handleClaimReward(currentRound.roundId)}
+                  disabled={currentBet?.isOver || (currentRound.isRain !== currentBet?.isBetRain)}
+                  className={`border-2 text-white p-2 max-w-full w-full flex justify-center space-x-3 items-center h-10 ${currentBet?.isOver ? 'bg-gray-700 text-black cursor-not-allowed' : 'bg-gray-900'}`}
+                >
+                  {renderIcons()}
+                </button>
+              </div>
+
             </div>
-            <div className='flex justify-center mt-4'>
-              <button className='border-2 border-white text-white p-2 max-w-full w-full'>Claim</button>
-            </div>
-
+            <button onClick={handleNext} className='p-2 text-5xl'>
+              <FontAwesomeIcon icon={faCaretRight} />
+            </button>
           </div>
-          <button onClick={handleNext} className='p-2 border text-2xl'>
-            <FontAwesomeIcon icon={faChevronRight} />
-          </button>
         </div>
+
       ) : (
         <div className='text-2xl font-semibold'>Loading...</div>
       )}
