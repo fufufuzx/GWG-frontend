@@ -27,12 +27,13 @@ const Pred = () => {
 
   const gwgContractAddress = '0x7EF2CFc86513ec79b8C8DE742a0991be2798A8e9'
 
+  const [queryRoundIds, setQueryRoundIds] = useState([9,6,7,8])
 
   const { data: roundsData } = useContractRead({
     address: gwgContractAddress,
     abi: GWGABI,
     functionName: 'getRounds',
-    args: [[1, 2, 3, 4, 5]],
+    args: [queryRoundIds],
     watch: false,
     onSuccess(data) {
       let parseData = data.map(round => ({
@@ -55,7 +56,7 @@ const Pred = () => {
     address: gwgContractAddress,
     abi: GWGABI,
     functionName: 'getBets',
-    args: [owner, [1, 2, 3, 4, 5]],
+    args: [owner, queryRoundIds],
     watch: false,
     onSuccess(data) {
       let parseData = data.map(bet => ({
