@@ -152,7 +152,7 @@ const Pred = () => {
   }
 
   return (
-    <div className='flex flex-col justify-center items-center'>
+    <div className='flex flex-col justify-center items-center min-h-screen'>
       <div className='pb-20'>
         <div className='flex justify-center items-center'>
           <Image
@@ -162,24 +162,24 @@ const Pred = () => {
             height={300}
           />
         </div>
-        <div className='text-2xl font-semibold border-b-2'>
-          Powered By Giza&WeatherXM
+        <div className='text-2xl font-semibold border-b-2 text-center mt-4'>
+          Powered By Giza & WeatherXM
         </div>
       </div>
-
+  
       {rounds.length > 0 ? (
-        <div className='flex flex-col items-center justify-center mt-8'>
-          <div className='flex items-center justify-center'>
-            <button onClick={handlePrevious} className='p-2 text-5xl'>
+        <div className='flex flex-col items-center justify-center mt-8 w-full'>
+          <div className='flex items-center justify-center w-full max-w-4xl'>
+
+            <button onClick={handlePrevious} className='p-2 text-3xl md:text-5xl'>
               <FontAwesomeIcon icon={faCaretLeft} />
             </button>
-            <div className={`bg-gray-900 border-2 p-4 m-2 w-96 shadow-lg transform transition-transform duration-200 ${animating ? 'opacity-30' : 'opacity-100'} text-center`}>
-              <h3 className='text-xl font-bold mb-2 text-white pt-5'>Round  {new Date(currentRound.endTimestamp * 1000).toLocaleDateString()}</h3>
+            
+            <div className={`bg-gray-900 border-2 p-4 m-2 w-full md:w-96 shadow-lg ${animating ? 'transition-opacity duration-200 opacity-30' : 'transition-opacity duration-200 opacity-100'} text-center`}>
+              <h3 className='text-lg md:text-xl font-bold mb-2 text-white pt-5'>Round  {new Date(currentRound.endTimestamp * 1000).toLocaleDateString()}</h3>
               <p className='text-white pt-5'>{"Location: Los Angeles"}</p>
               <p className='text-white'>Start Time: {new Date(currentRound.startTimestamp * 1000).toLocaleString()}</p>
-              <p className='text-white'>End Time: {new Date(currentRound.endTimestamp * 1000).toLocaleString()}</p>
-
-
+              <p className={`${animating ? 'transition-opacity duration-200 opacity-30' : 'transition-opacity duration-200 opacity-100'}'text-white'`}>End Time: {new Date(currentRound.endTimestamp * 1000).toLocaleString()}</p>
               <div className='flex justify-between mt-4 space-x-2 pt-10'>
                 <button
                   onClick={() => handlePlaceBet(currentRound.roundId, false)}
@@ -198,10 +198,7 @@ const Pred = () => {
                   <p className='text-white'>{100 - currentRound.betAward}</p>
                 </button>
               </div>
-
-
               <div className='flex justify-center mt-4'>
-
                 <button
                   onClick={() => handleClaimReward(currentRound.roundId)}
                   disabled={currentBet?.isOver || (currentRound.isRain !== currentBet?.isBetRain)}
@@ -210,18 +207,16 @@ const Pred = () => {
                   {renderIcons()}
                 </button>
               </div>
-
             </div>
-            <button onClick={handleNext} className='p-2 text-5xl'>
+
+            <button onClick={handleNext} className='p-2 text-3xl md:text-5xl'>
               <FontAwesomeIcon icon={faCaretRight} />
             </button>
           </div>
         </div>
-
       ) : (
         <div className='text-2xl font-semibold'>Loading...</div>
       )}
-
     </div>
   )
 }
