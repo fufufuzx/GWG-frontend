@@ -2,13 +2,11 @@ import { ethers } from 'ethers'
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight, faCaretLeft, faCaretRight } from '@fortawesome/free-solid-svg-icons';
-import { faSun, faCloudRain, faQuestion, faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
+import { faCaretLeft, faCaretRight } from '@fortawesome/free-solid-svg-icons';
+import { faSun, faCloudRain, faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
 import { useNetwork, useContractRead, useContractWrite, useAccount } from 'wagmi'
 
 import GWGABI from '../../pages/data/ABI/gwg.json'
-
-
 
 const Pred = () => {
 
@@ -19,15 +17,15 @@ const Pred = () => {
   const [rounds, setRounds] = useState([]);
   const [bets, setBets] = useState([]);
 
-
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   const currentRound = rounds[currentRoundIndex];
   const currentBet = bets[currentRoundIndex];
   const [animating, setAnimating] = useState(false);
+  const [direction, setDirection] = useState('right'); // 记录翻页方向
 
   const gwgContractAddress = '0x7EF2CFc86513ec79b8C8DE742a0991be2798A8e9'
 
-  const [queryRoundIds, setQueryRoundIds] = useState([9,6,7,8])
+  const [queryRoundIds, setQueryRoundIds] = useState([9, 6, 7, 8])
 
   const { data: roundsData } = useContractRead({
     address: gwgContractAddress,
@@ -75,7 +73,6 @@ const Pred = () => {
     placeBet({ recklesslySetUnpreparedArgs: [roundId, prediction] });
   };
 
-
   const { write: placeBet } = useContractWrite({
     address: gwgContractAddress,
     abi: GWGABI,
@@ -87,8 +84,6 @@ const Pred = () => {
       console.log('eeee')
     }
   })
-
-
 
   const handleClaimReward = (roundId) => {
     claimReward({ recklesslySetUnpreparedArgs: [roundId] });
@@ -106,26 +101,26 @@ const Pred = () => {
     }
   })
 
-
-
   const handlePrevious = () => {
+    setDirection('left');
     setAnimating(true);
     setTimeout(() => {
       setCurrentRoundIndex((prevIndex) =>
         prevIndex === 0 ? rounds.length - 1 : prevIndex - 1
       );
       setAnimating(false);
-    }, 200);
+    }, 500); // 增加动画时间
   };
 
   const handleNext = () => {
+    setDirection('right');
     setAnimating(true);
     setTimeout(() => {
       setCurrentRoundIndex((prevIndex) =>
         prevIndex === rounds.length - 1 ? 0 : prevIndex + 1
       );
       setAnimating(false);
-    }, 200);
+    }, 500); // 增加动画时间
   };
 
   const renderIcons = () => {
@@ -152,7 +147,7 @@ const Pred = () => {
   }
 
   return (
-    <div className='flex flex-col justify-center items-center'>
+    <div className='flex flex-col justify-center items-center min-h-screen'>
       <div className='pb-20'>
         <div className='flex justify-center items-center'>
           <Image
@@ -162,24 +157,24 @@ const Pred = () => {
             height={300}
           />
         </div>
-        <div className='text-2xl font-semibold border-b-2'>
-          Powered By Giza&WeatherXM
+        <div className='text-2xl font-semibold border-b-2 text-center mt-4'>
+          Powered By Giza & WeatherXM
         </div>
       </div>
 
       {rounds.length > 0 ? (
-        <div className='flex flex-col items-center justify-center mt-8'>
-          <div className='flex items-center justify-center'>
-            <button onClick={handlePrevious} className='p-2 text-5xl'>
+        <div className='flex flex-col items-center justify-center mt-8 w-full'>
+          <div className='flex items-center justify-center w-full max-w-4xl'>
+
+            <button onClick={handlePrevious} className='p-2 text-3xl md:text-5xl z-10'>
               <FontAwesomeIcon icon={faCaretLeft} />
             </button>
-            <div className={`bg-gray-900 border-2 p-4 m-2 w-96 shadow-lg transform transition-transform duration-200 ${animating ? 'opacity-30' : 'opacity-100'} text-center`}>
-              <h3 className='text-xl font-bold mb-2 text-white pt-5'>Round  {new Date(currentRound.endTimestamp * 1000).toLocaleDateString()}</h3>
-              <p className='text-white pt-5'>{"Location: Los Angeles"}</p>
+
+            <div className={`bg-gray-900 border-2 p-4 m-2 w-full md:w-96 shadow-lg transition-transform transform ${animating ? (direction === 'right' ? 'translate-x-20 opacity-0' : '-translate-x-20 opacity-0') : 'translate-x-0 opacity-100'} text-center`}>
+              <h3 className='text-lg md:text-xl font-bold mb-2 text-white pt-5'>Round  {new Date(currentRound.endTimestamp * 1000).toLocaleDateString()}</h3>
+              <p className='text-white pt-5'>Location: {"Los Angeles"}</p>
               <p className='text-white'>Start Time: {new Date(currentRound.startTimestamp * 1000).toLocaleString()}</p>
               <p className='text-white'>End Time: {new Date(currentRound.endTimestamp * 1000).toLocaleString()}</p>
-
-
               <div className='flex justify-between mt-4 space-x-2 pt-10'>
                 <button
                   onClick={() => handlePlaceBet(currentRound.roundId, false)}
@@ -198,10 +193,7 @@ const Pred = () => {
                   <p className='text-white'>{100 - currentRound.betAward}</p>
                 </button>
               </div>
-
-
               <div className='flex justify-center mt-4'>
-
                 <button
                   onClick={() => handleClaimReward(currentRound.roundId)}
                   disabled={currentBet?.isOver || (currentRound.isRain !== currentBet?.isBetRain)}
@@ -210,18 +202,16 @@ const Pred = () => {
                   {renderIcons()}
                 </button>
               </div>
-
             </div>
-            <button onClick={handleNext} className='p-2 text-5xl'>
+
+            <button onClick={handleNext} className='p-2 text-3xl md:text-5xl z-10'>
               <FontAwesomeIcon icon={faCaretRight} />
             </button>
           </div>
         </div>
-
       ) : (
         <div className='text-2xl font-semibold'>Loading...</div>
       )}
-
     </div>
   )
 }
